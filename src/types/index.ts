@@ -93,9 +93,15 @@ export interface OpenPRAnalytics {
   openPRs: OpenPR[];
 }
 
+export interface DateRange {
+  startDate: string; // ISO date string
+  endDate: string;   // ISO date string
+}
+
 export interface AnalyticsData {
   overallMetrics: PRMetrics;
   userMetrics: UserMetrics[];
   timeSeriesData: TimeSeriesData[];
   openPRAnalytics: OpenPRAnalytics;
+  dateRange?: DateRange;
 }

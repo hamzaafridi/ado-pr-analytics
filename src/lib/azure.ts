@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { AzureDevOpsCredentials, PullRequestResponse, PullRequest, OpenPR } from '@/types';
+import { AzureDevOpsCredentials, PullRequestResponse, PullRequest, OpenPR, DateRange } from '@/types';
 
 export class AzureDevOpsClient {
   private client: AxiosInstance;
@@ -19,14 +19,24 @@ export class AzureDevOpsClient {
     });
   }
 
-  async getPullRequests(): Promise<PullRequest[]> {
+  async getPullRequests(dateRange?: DateRange | null): Promise<PullRequest[]> {
     try {
+      const params: any = {
+        'api-version': '7.0',
+        status: 'all', // Get all PRs (active, completed, abandoned)
+        '$top': 1000 // Get up to 1000 PRs
+      };
+
+      // Add date filtering if provided
+      if (dateRange) {
+        params.searchCriteria = {
+          createdAfter: dateRange.startDate,
+          createdBefore: dateRange.endDate
+        };
+      }
+
       const response = await this.client.get<PullRequestResponse>('/git/pullrequests', {
-        params: {
-          'api-version': '7.0',
-          status: 'all', // Get all PRs (active, completed, abandoned)
-          '$top': 1000 // Get up to 1000 PRs
-        }
+        params
       });
 
       return response.data.value;
@@ -36,14 +46,24 @@ export class AzureDevOpsClient {
     }
   }
 
-  async getOpenPullRequests(): Promise<OpenPR[]> {
+  async getOpenPullRequests(dateRange?: DateRange | null): Promise<OpenPR[]> {
     try {
+      const params: any = {
+        'api-version': '7.0',
+        status: 'active', // Get only active/open PRs
+        '$top': 1000 // Get up to 1000 PRs
+      };
+
+      // Add date filtering if provided
+      if (dateRange) {
+        params.searchCriteria = {
+          createdAfter: dateRange.startDate,
+          createdBefore: dateRange.endDate
+        };
+      }
+
       const response = await this.client.get<PullRequestResponse>('/git/pullrequests', {
-        params: {
-          'api-version': '7.0',
-          status: 'active', // Get only active/open PRs
-          '$top': 1000 // Get up to 1000 PRs
-        }
+        params
       });
 
       const prs = response.data.value;

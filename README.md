@@ -18,6 +18,7 @@ A minimal web application that fetches pull request data from Azure DevOps and p
 - **Review Status**: Visual indicators for review votes (approved, pending, rejected)
 - **Interactive Filtering**: Search and filter capabilities across all components
 - **Sortable Tables**: Click column headers to sort by any field
+- **Date Range Filtering**: Filter all analytics by PR creation date range
 
 ### UI/UX
 - **Responsive Design**: Clean, modern interface built with Tailwind CSS
@@ -83,6 +84,11 @@ npm run dev
 
 ### Filtering and Sorting Features
 
+- **Date Range Filter**: Global filter to analyze PRs created within a specific time period
+  - Toggle on/off with checkbox
+  - Custom date range selection
+  - Quick preset buttons (7 days, 30 days, 90 days)
+  - Defaults to last 30 days when enabled
 - **Search**: Use the search boxes to filter by user names, PR titles, or reviewer names
 - **Sort**: Click any column header to sort by that field (click again to reverse order)
 - **Status Filter**: Filter open PRs by draft/active status
@@ -91,7 +97,8 @@ npm run dev
 
 ## API Endpoints Used
 
-- `GET /git/pullrequests` - Fetches all pull requests for the project
+- `GET /git/pullrequests` - Fetches all pull requests for the project (supports date filtering)
+- `GET /git/pullrequests/{id}/reviewers` - Fetches reviewer information for specific PRs
 - `GET /git/repositories` - Tests connection validity
 
 ## Project Structure

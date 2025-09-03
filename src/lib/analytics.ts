@@ -1,4 +1,4 @@
-import { PullRequest, PRMetrics, UserMetrics, TimeSeriesData, AnalyticsData, OpenPR, OpenPRMetrics, UserOpenPRCount, ReviewerMetrics, OpenPRAnalytics } from '@/types';
+import { PullRequest, PRMetrics, UserMetrics, TimeSeriesData, AnalyticsData, OpenPR, OpenPRMetrics, UserOpenPRCount, ReviewerMetrics, OpenPRAnalytics, DateRange } from '@/types';
 
 export function calculateTimeToClose(pr: PullRequest): number | null {
   if (!pr.closedDate) return null;
@@ -218,11 +218,39 @@ export function calculateOpenPRAnalytics(openPRs: OpenPR[]): OpenPRAnalytics {
   };
 }
 
-export function calculateAnalytics(prs: PullRequest[], openPRs: OpenPR[]): AnalyticsData {
+export function filterPRsByDateRange(prs: PullRequest[], dateRange: DateRange | null): PullRequest[] {
+  if (!dateRange) return prs;
+  
+  const startDate = new Date(dateRange.startDate);
+  const endDate = new Date(dateRange.endDate);
+  
+  return prs.filter(pr => {
+    const creationDate = new Date(pr.creationDate);
+    return creationDate >= startDate && creationDate <= endDate;
+  });
+}
+
+export function filterOpenPRsByDateRange(openPRs: OpenPR[], dateRange: DateRange | null): OpenPR[] {
+  if (!dateRange) return openPRs;
+  
+  const startDate = new Date(dateRange.startDate);
+  const endDate = new Date(dateRange.endDate);
+  
+  return openPRs.filter(pr => {
+    const creationDate = new Date(pr.creationDate);
+    return creationDate >= startDate && creationDate <= endDate;
+  });
+}
+
+export function calculateAnalytics(prs: PullRequest[], openPRs: OpenPR[], dateRange?: DateRange | null): AnalyticsData {
+  const filteredPRs = filterPRsByDateRange(prs, dateRange || null);
+  const filteredOpenPRs = filterOpenPRsByDateRange(openPRs, dateRange || null);
+  
   return {
-    overallMetrics: calculateOverallMetrics(prs),
-    userMetrics: calculateUserMetrics(prs),
-    timeSeriesData: calculateTimeSeriesData(prs),
-    openPRAnalytics: calculateOpenPRAnalytics(openPRs)
+    overallMetrics: calculateOverallMetrics(filteredPRs),
+    userMetrics: calculateUserMetrics(filteredPRs),
+    timeSeriesData: calculateTimeSeriesData(filteredPRs),
+    openPRAnalytics: calculateOpenPRAnalytics(filteredOpenPRs),
+    dateRange: dateRange || undefined
   };
 }

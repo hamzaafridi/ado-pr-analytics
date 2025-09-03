@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AzureDevOpsCredentials, AnalyticsData } from '@/types';
+import { AzureDevOpsCredentials, AnalyticsData, DateRange } from '@/types';
 import { AzureDevOpsClient } from '@/lib/azure';
 import { calculateAnalytics } from '@/lib/analytics';
 import MetricsCards from './MetricsCards';
@@ -12,6 +12,7 @@ import OpenPRUserPieChart from './OpenPRUserPieChart';
 import ReviewerPieChart from './ReviewerPieChart';
 import ReviewerMetricsTable from './ReviewerMetricsTable';
 import OpenPRsTable from './OpenPRsTable';
+import DateRangeFilter from './DateRangeFilter';
 
 interface DashboardProps {
   credentials: AzureDevOpsCredentials;
@@ -22,6 +23,9 @@ export default function Dashboard({ credentials, onLogout }: DashboardProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [rawPRs, setRawPRs] = useState<any[]>([]);
+  const [rawOpenPRs, setRawOpenPRs] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -34,8 +38,13 @@ export default function Dashboard({ credentials, onLogout }: DashboardProps) {
           client.getPullRequests(),
           client.getOpenPullRequests()
         ]);
-        const analyticsData = calculateAnalytics(prs, openPRs);
         
+        // Store raw data for filtering
+        setRawPRs(prs);
+        setRawOpenPRs(openPRs);
+        
+        // Calculate initial analytics
+        const analyticsData = calculateAnalytics(prs, openPRs, dateRange);
         setAnalytics(analyticsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
@@ -46,6 +55,18 @@ export default function Dashboard({ credentials, onLogout }: DashboardProps) {
 
     fetchData();
   }, [credentials]);
+
+  // Recalculate analytics when date range changes
+  useEffect(() => {
+    if (rawPRs.length > 0 || rawOpenPRs.length > 0) {
+      const analyticsData = calculateAnalytics(rawPRs, rawOpenPRs, dateRange);
+      setAnalytics(analyticsData);
+    }
+  }, [dateRange, rawPRs, rawOpenPRs]);
+
+  const handleDateRangeChange = (newDateRange: DateRange | null) => {
+    setDateRange(newDateRange);
+  };
 
   if (isLoading) {
     return (
@@ -126,6 +147,12 @@ export default function Dashboard({ credentials, onLogout }: DashboardProps) {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Date Range Filter */}
+        <DateRangeFilter 
+          onDateRangeChange={handleDateRangeChange}
+          initialDateRange={dateRange}
+        />
+
         {/* Closed PR Metrics Cards */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Closed PR Analytics</h2>
