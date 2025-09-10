@@ -16,6 +16,11 @@ export interface PullRequest {
   closedDate?: string;
   status: string;
   isDraft: boolean;
+  repository?: {
+    name: string;
+    id: string;
+  };
+  sourceRefName?: string;
 }
 
 export interface PullRequestResponse {
@@ -56,6 +61,7 @@ export interface OpenPR {
   creationDate: string;
   status: string;
   isDraft: boolean;
+  url: string;
   reviewers?: {
     displayName: string;
     uniqueName: string;
@@ -95,7 +101,7 @@ export interface OpenPRAnalytics {
 
 export interface DateRange {
   startDate: string; // ISO date string
-  endDate: string;   // ISO date string
+  endDate: string; // ISO date string
 }
 
 export interface AnalyticsData {
