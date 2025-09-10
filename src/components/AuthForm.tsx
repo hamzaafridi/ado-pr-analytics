@@ -1,60 +1,77 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { AzureDevOpsCredentials } from '@/types';
+import { useState } from "react";
+import { AzureDevOpsCredentials } from "@/types";
 
 interface AuthFormProps {
-  onAuthenticate: (credentials: AzureDevOpsCredentials) => void;
+  onAuthenticate: (
+    credentials: AzureDevOpsCredentials,
+    saveCredentials?: boolean,
+    pin?: string
+  ) => void;
   isLoading: boolean;
 }
 
 export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
   const [formData, setFormData] = useState<AzureDevOpsCredentials>({
-    organization: '',
-    project: '',
-    personalAccessToken: ''
+    organization: "",
+    project: "",
+    personalAccessToken: "",
   });
 
   const [errors, setErrors] = useState<Partial<AzureDevOpsCredentials>>({});
+  const [saveCredentials, setSaveCredentials] = useState(false);
+  const [pin, setPin] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     const newErrors: Partial<AzureDevOpsCredentials> = {};
     if (!formData.organization.trim()) {
-      newErrors.organization = 'Organization name is required';
+      newErrors.organization = "Organization name is required";
     }
     if (!formData.project.trim()) {
-      newErrors.project = 'Project name is required';
+      newErrors.project = "Project name is required";
     }
     if (!formData.personalAccessToken.trim()) {
-      newErrors.personalAccessToken = 'Personal Access Token is required';
+      newErrors.personalAccessToken = "Personal Access Token is required";
+    }
+    if (saveCredentials && pin.length < 4) {
+      setErrors((prev) => ({
+        ...prev,
+        pin: "PIN must be at least 4 characters",
+      }));
+      return;
     }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      onAuthenticate(formData);
+      onAuthenticate(
+        formData,
+        saveCredentials,
+        saveCredentials ? pin : undefined
+      );
     }
   };
 
-  const handleChange = (field: keyof AzureDevOpsCredentials) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
+  const handleChange =
+    (field: keyof AzureDevOpsCredentials) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({
         ...prev,
-        [field]: undefined
+        [field]: e.target.value,
       }));
-    }
-  };
+
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: undefined,
+        }));
+      }
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -67,11 +84,14 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
             Enter your Azure DevOps credentials to get started
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="organization" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="organization"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Organization Name
               </label>
               <input
@@ -80,19 +100,24 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
                 type="text"
                 required
                 value={formData.organization}
-                onChange={handleChange('organization')}
+                onChange={handleChange("organization")}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.organization ? 'border-red-300' : 'border-gray-300'
+                  errors.organization ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="your-organization"
               />
               {errors.organization && (
-                <p className="mt-1 text-sm text-red-600">{errors.organization}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.organization}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="project" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="project"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Project Name
               </label>
               <input
@@ -101,9 +126,9 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
                 type="text"
                 required
                 value={formData.project}
-                onChange={handleChange('project')}
+                onChange={handleChange("project")}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.project ? 'border-red-300' : 'border-gray-300'
+                  errors.project ? "border-red-300" : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="your-project"
               />
@@ -113,7 +138,10 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
             </div>
 
             <div>
-              <label htmlFor="personalAccessToken" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="personalAccessToken"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Personal Access Token
               </label>
               <input
@@ -122,19 +150,68 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
                 type="password"
                 required
                 value={formData.personalAccessToken}
-                onChange={handleChange('personalAccessToken')}
+                onChange={handleChange("personalAccessToken")}
                 className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.personalAccessToken ? 'border-red-300' : 'border-gray-300'
+                  errors.personalAccessToken
+                    ? "border-red-300"
+                    : "border-gray-300"
                 } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Enter your PAT"
               />
               {errors.personalAccessToken && (
-                <p className="mt-1 text-sm text-red-600">{errors.personalAccessToken}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.personalAccessToken}
+                </p>
               )}
               <p className="mt-1 text-xs text-gray-500">
                 Create a PAT with Code (read) permissions in Azure DevOps
               </p>
             </div>
+
+            <div className="flex items-center">
+              <input
+                id="saveCredentials"
+                name="saveCredentials"
+                type="checkbox"
+                checked={saveCredentials}
+                onChange={(e) => setSaveCredentials(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="saveCredentials"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Save credentials securely with PIN protection
+              </label>
+            </div>
+
+            {saveCredentials && (
+              <div>
+                <label
+                  htmlFor="pin"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  PIN (minimum 4 characters)
+                </label>
+                <input
+                  id="pin"
+                  name="pin"
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter a PIN to protect your credentials"
+                  minLength={4}
+                />
+                {errors.pin && (
+                  <p className="mt-1 text-sm text-red-600">{errors.pin}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Your credentials will be encrypted and stored locally. You'll
+                  need this PIN to access them next time.
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -145,14 +222,30 @@ export default function AuthForm({ onAuthenticate, isLoading }: AuthFormProps) {
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Connecting...
                 </div>
               ) : (
-                'Connect to Azure DevOps'
+                "Connect to Azure DevOps"
               )}
             </button>
           </div>
